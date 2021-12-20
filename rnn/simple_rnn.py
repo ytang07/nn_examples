@@ -24,16 +24,15 @@ def calculate_loss(X, Y, U, V, W):
             new_input[timestep] = x[timestep] # define a single input for that timestep
             mulu = np.dot(U, new_input)
             mulw = np.dot(W, prev_activation)
-            add = mulu + mulw
-            activation = sigmoid(add)
+            _sum = mulu + mulw
+            activation = sigmoid(_sum)
             mulv = np.dot(V, activation)
             prev_activation = activation
         # calculate and add loss per record
         loss_per_record = float((y - mulv)**2/2)
         loss += loss_per_record
     # calculate loss after first Y pass
-    loss = loss/float(y.shape[0])
-    return loss, prev_activation
+    return loss, activation
 
 # takes x values and the weights matrices
 # returns layer dictionary, final weights (mulu, mulw, mulv)
@@ -44,12 +43,12 @@ def calc_layers(x, U, V, W, prev_activation):
         new_input[timestep] = x[timestep]
         mulu = np.dot(U, new_input)
         mulw = np.dot(W, prev_activation)
-        add = mulw + mulu
-        activation = sigmoid(add)
+        _sum = mulw + mulu
+        activation = sigmoid(_sum)
         mulv = np.dot(V, activation)
         layers.append({'activation': activation, 'prev_activation': prev_activation})
         prev_activation = activation
-    
+
     return layers, mulu, mulw, mulv
 
 def backprop(x, U, V, W, dmulv, mulu, mulw, layers):
@@ -64,21 +63,23 @@ def backprop(x, U, V, W, dmulv, mulu, mulw, layers):
     dU_i = np.zeros(U.shape)
     dW_i = np.zeros(W.shape)
     
-    add = mulu + mulw
+    _sum = mulu + mulw
+    dsv = np.dot(np.transpose(V), dmulv)
+    
+    def get_previous_activation_differential(_sum, ds, W):
+        d_sum = _sum * (1 - _sum) * ds
+        dmulw = d_sum * np.ones_like(ds)
+        return np.dot(np.transpose(W), dmulw)
+    
     for timestep in range(seq_len):
         dV_t = np.dot(dmulv, np.transpose(layers[timestep]['activation']))
-        dsv = np.dot(np.transpose(V), dmulv)
         ds = dsv
-        dadd = add * (1 - add) * ds
-        dmulw = dadd * np.ones_like(mulw)
-        dprev_activation = np.dot(np.transpose(W), dmulw)
+        dprev_activation = get_previous_activation_differential(_sum, ds, W)
         
-        for i in range(timestep-1, max(-1, timestep-bptt_truncate-1), -1):
+        for _ in range(timestep-1, max(-1, timestep-bptt_truncate-1), -1):
             ds = dsv + dprev_activation
-            dadd = add * (1-add) * ds
-            dmulw = dadd * np.ones_like(mulw)
+            dprev_activation = get_previous_activation_differential(_sum, ds, W)
             dW_i = np.dot(W, layers[timestep]['prev_activation'])
-            dprev_activation = np.dot(np.transpose(W), dmulw)
             
             new_input = np.zeros(x.shape)
             new_input[timestep] = x[timestep]
@@ -115,7 +116,7 @@ def train(U, V, W, X, Y, X_validation, Y_validation):
         loss, prev_activation = calculate_loss(X, Y, U, V, W)
 
         # check validation loss
-        val_loss, prev_activation = calculate_loss(X_validation, Y_validation, U, V, W)
+        val_loss, _ = calculate_loss(X_validation, Y_validation, U, V, W)
         
         print(f'Epoch: {epoch+1}, Loss: {loss}, Validation Loss: {val_loss}')
 
@@ -127,12 +128,13 @@ def train(U, V, W, X, Y, X_validation, Y_validation):
             
             layers, mulu, mulw, mulv = calc_layers(x, U, V, W, prev_activation)
                 
-            # derivative of the prediction
-            dmulv = (mulv - y)
+            # difference of the prediction
+            dmulv = mulv - y
             dU, dV, dW = backprop(x, U, V, W, dmulv, mulu, mulw, layers)
             
             # update weights
             U -= learning_rate * dU
             V -= learning_rate * dV
             W -= learning_rate * dW
+            
     return U, V, W

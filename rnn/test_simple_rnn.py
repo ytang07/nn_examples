@@ -36,7 +36,7 @@ U = np.random.uniform(0, 1, (hidden_dim, seq_len)) # weights from input to hidde
 V = np.random.uniform(0, 1, (output_dim, hidden_dim)) # weights from hidden to output layer
 W = np.random.uniform(0, 1, (hidden_dim, hidden_dim)) # recurrent weights for layer (RNN weigts)
 
-train(U, V, W, X, Y, X_validation, Y_validation)
+U, V, W = train(U, V, W, X, Y, X_validation, Y_validation)
 
 # predictions on the training set
 predictions = []
@@ -47,8 +47,8 @@ for i in range(Y.shape[0]):
     for timestep in range(seq_len):
         mulu = np.dot(U, x)
         mulw = np.dot(W, prev_activation)
-        add = mulu + mulw
-        activation = sigmoid(add)
+        _sum = mulu + mulw
+        activation = sigmoid(_sum)
         mulv = np.dot(V, activation)
         prev_activation = activation
     predictions.append(mulv)
@@ -69,8 +69,8 @@ for i in range(Y_validation.shape[0]):
     for timestep in range(seq_len):
         mulu = np.dot(U, x)
         mulw = np.dot(W, prev_activation)
-        add = mulu + mulw
-        activation = sigmoid(add)
+        _sum = mulu + mulw
+        activation = sigmoid(_sum)
         mulv = np.dot(V, activation)
         prev_activation = activation
     val_predictions.append(mulv)
