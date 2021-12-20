@@ -4,7 +4,7 @@ import numpy as np
 # create RNN architecture
 learning_rate = 0.0001
 seq_len = 50
-nepoch = 25
+max_epochs = 25
 hidden_dim = 100
 output_dim = 1
 bptt_truncate = 5 # backprop through time --> lasts 5 iterations
@@ -110,7 +110,7 @@ def backprop(x, U, V, W, dmulv, mulu, mulw, layers):
 
 # training
 def train(U, V, W, X, Y, X_validation, Y_validation):
-    for epoch in range(nepoch):
+    for epoch in range(max_epochs):
         # calculate initial loss, ie what the output is given a random set of weights
         loss, prev_activation = calculate_loss(X, Y, U, V, W)
 
