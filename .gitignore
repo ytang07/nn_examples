@@ -130,3 +130,5 @@ dmypy.json
 
 # works in progress
 wip*
+
+.DS_Store
