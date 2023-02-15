@@ -16,3 +16,4 @@ PyTorch vids
 - [Training a Simple Neural Network in PyTorch](https://youtu.be/vpy8rOeK-E4)
 - [Building a CNN in PyTorch - Getting it to work](https://youtu.be/RXDds6I7ak4)
 - [PyTorch CNN Exploration](https://www.youtube.com/watch?v=bZKZt-bRaAc)
+- [Optimize an RNN by ~60%](https://youtu.be/6QjPmgcsLLs)
